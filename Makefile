@@ -1,6 +1,6 @@
-all: main
-	gcc -o notification-box main.o -lX11
+libs="x11 cairo glib-2.0 librsvg-2.0"
 
-main: main.c
-	gcc -c main.c
+notification-box: main.c config.h
+	gcc -o notification-box main.c $(shell pkg-config --cflags $(libs)) $(shell pkg-config --libs $(libs))
+
 
