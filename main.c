@@ -12,17 +12,20 @@
 
 #include "config.h"
 
-void print_usage(void);
-void event_received(void);
-void timer_fired(cairo_t *cr, RsvgHandle *pic);
-int spawn_new_window();
-int modify_existing(pid_t pid, char modf);
-int test_process_is_correct();
-
 static long val = 0;
 static long mval = 1;
 static char *wm_name  = "NotificationBox";
 static char *wm_class = "notification-box";
+
+static const int width = 256;
+static const int height = 256;
+
+void print_usage(void);
+void event_received(void);
+void timer_fired(int *timer);
+int spawn_new_window(void);
+int modify_existing(pid_t pid, char modf);
+int test_process_is_correct(pid_t pid);
 
 int main(int argc, char** argv) {
 	int retcode = 0;
@@ -123,16 +126,37 @@ int spawn_new_window() {
 		return 1;
 	}
 
+
     // Window
 	int screen = DefaultScreen(dsp);
 	unsigned long white = WhitePixel(dsp, screen);
 	unsigned long black = BlackPixel(dsp, screen);
 	Window root = DefaultRootWindow(dsp);
-	Window win = XCreateSimpleWindow(dsp, root,
-									 50, 50,
-									 200, 200,
-									 0, black,
-									 white);
+
+    XVisualInfo vinfo;
+    XMatchVisualInfo(dsp, screen, 32, TrueColor, &vinfo);
+
+    XSetWindowAttributes attr;
+    attr.colormap = XCreateColormap(dsp, root, vinfo.visual, AllocNone);
+    attr.border_pixel = 0;
+    attr.background_pixel = 0x80808080;
+
+	//Window win = XCreateSimpleWindow(dsp, root,
+	//								 0, 0,      // x, y
+	//								 width, height,
+	//								 0, black,
+	//								 white);
+    Window win = XCreateWindow(dsp, root, 
+                               0, 0,  // x, y
+                               width, height,
+                               0, vinfo.depth, 
+                               InputOutput, vinfo.visual, 
+                               CWColormap | CWBorderPixel | CWBackPixel, 
+                               &attr);
+
+    Atom wm_delete_window = XInternAtom(dsp, "WM_DELETE_WINDOW", 0);
+    XSetWMProtocols(dsp, win, &wm_delete_window, 1);
+
 
     // Set WM_CLASS
     XClassHint *classhint = XAllocClassHint();
@@ -153,8 +177,8 @@ int spawn_new_window() {
 
 
     // Create Cairo context
-    cairo_surface_t *sfc = cairo_xlib_surface_create(dsp, win, DefaultVisual(dsp, screen), 256, 256);
-    cairo_xlib_surface_set_size(sfc, 256, 256);
+    cairo_surface_t *sfc = cairo_xlib_surface_create(dsp, win, vinfo.visual, width, height);
+    cairo_xlib_surface_set_size(sfc, width, height);
     cairo_t *cr = cairo_create(sfc);
 
     // Cairo test
@@ -175,28 +199,39 @@ int spawn_new_window() {
 	// Draw the image
 	GError *gerr = NULL;
     RsvgHandle *pic =rsvg_handle_new_from_file(speaker_image_path, &gerr);
-    rsvg_handle_set_dpi (pic, 10);
+    rsvg_handle_set_dpi (pic, 75);
+    RsvgRectangle viewport;
+    viewport.x = 0;
+    viewport.y = 0;
+    viewport.width = width;
+    viewport.height = height;
+    rsvg_handle_render_document(pic, cr, &viewport, &gerr);
+    //rsvg_handle_render_cairo(pic, cr);
+
+    // Get everything displayed
+    XFlush(dsp);
 
 	// Nonblocking event loop
 	// This returns the FD of the X11 display (or something like that)
 	int x11_fd = ConnectionNumber(dsp);
 	fd_set in_fds;
 	struct timeval tv;
-	while(1) {
+	int timer = 0;
+	while(timer < 2) {
 		// Create a File Description Set containing x11_fd
 		FD_ZERO(&in_fds);
 		FD_SET(x11_fd, &in_fds);
 
 		// Set our timer.  One second sounds good.
-		tv.tv_usec = 10000;
-		tv.tv_sec = 0;
+		tv.tv_usec = 0;
+		tv.tv_sec = 1;
 
 		// Wait for X Event or a Timer
 		int num_ready_fds = select(x11_fd + 1, &in_fds, NULL, NULL, &tv);
 		if (num_ready_fds > 0)
 			event_received();
 		else if (num_ready_fds == 0)
-			timer_fired(cr, pic);
+			timer_fired(&timer);
 
 		// Handle XEvents and flush the input 
 		while(XPending(dsp))
@@ -214,7 +249,7 @@ void event_received(void) {
 	//printf("Event Received!\n");
 }
 
-void timer_fired(cairo_t *cr, RsvgHandle *pic) {
+void timer_fired(int *timer) {
 	printf("Timer, val: %d\n", val);
-    rsvg_handle_render_cairo (pic, cr);
+	(*timer)++;
 }
