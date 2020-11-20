@@ -26,6 +26,7 @@ void timer_fired(int *timer);
 int spawn_new_window(void);
 int modify_existing(pid_t pid, char modf);
 int test_process_is_correct(pid_t pid);
+void draw_progress(cairo_t *cr);
 
 int main(int argc, char** argv) {
 	int retcode = 0;
@@ -181,32 +182,19 @@ int spawn_new_window() {
     cairo_xlib_surface_set_size(sfc, width, height);
     cairo_t *cr = cairo_create(sfc);
 
-    // Cairo test
-    /*
-    cairo_set_source_rgb(cr, 1, 1, 1);
-    cairo_paint(cr);
-    cairo_move_to(cr, 20, 20);
-    cairo_line_to(cr, 200, 400);
-    cairo_line_to(cr, 450, 100);
-    cairo_line_to(cr, 20, 20);
-    cairo_set_source_rgb(cr, 0, 0, 1);
-    cairo_fill_preserve(cr);
-    cairo_set_line_width(cr, 5);
-    cairo_set_source_rgb(cr, 1, 1, 0);
-    cairo_stroke(cr);
-    */
-
 	// Draw the image
 	GError *gerr = NULL;
     RsvgHandle *pic =rsvg_handle_new_from_file(speaker_image_path, &gerr);
     rsvg_handle_set_dpi (pic, 75);
     RsvgRectangle viewport;
-    viewport.x = 0;
-    viewport.y = 0;
-    viewport.width = width;
-    viewport.height = height;
+    viewport.x = 10;
+    viewport.y = 5;
+    viewport.width = width - 10;
+    viewport.height = height - 40;
     rsvg_handle_render_document(pic, cr, &viewport, &gerr);
-    //rsvg_handle_render_cairo(pic, cr);
+
+    // Draw the initial progress
+    draw_progress(cr);
 
     // Get everything displayed
     XFlush(dsp);
@@ -252,4 +240,19 @@ void event_received(void) {
 void timer_fired(int *timer) {
 	printf("Timer, val: %d\n", val);
 	(*timer)++;
+}
+
+void draw_progress(cairo_t *cr) {
+    const int w = 6;
+    const int h = 15;
+    const int maxrectcount = 24;
+
+    int howmany = ((float) val / 100.0) * maxrectcount;
+    int i;
+    for(i = 1; i < howmany + 1; i++) {
+        cairo_rectangle (cr, (w + 4) * i, 230, w, h);
+    }
+
+    cairo_set_source_rgba (cr, 0, 0.3, 1, 0.7);
+    cairo_fill (cr);
 }
