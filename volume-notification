@@ -1,0 +1,17 @@
+#!/bin/zsh
+
+pidof notification-box
+
+if [[ $? == 1 ]]
+then
+    notification-box 2 $(pamixer --get-volume)
+else
+    if [[ $1 == "up" ]]
+    then
+        notification-box + $(pidof notification-box)
+    elif [[ $1 == "down" ]]
+    then
+        notification-box - $(pidof notification-box)
+    fi
+fi
+

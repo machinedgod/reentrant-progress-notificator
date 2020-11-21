@@ -12,6 +12,6 @@ gchar *headphones_image_path =
 
 // How long will the window stay up ms.
 static const long startlife = 
-    2000;
+    1000;
 
 #endif // _CONFIG_H_

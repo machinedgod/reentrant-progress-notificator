@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include <signal.h>
 
@@ -23,8 +24,6 @@ static long life = startlife;
 
 
 void print_usage(void);
-void event_received(void);
-void timer_fired(cairo_t *cr);
 int spawn_new_window(void);
 int modify_existing(pid_t pid, char modf);
 int test_process_is_correct(pid_t pid);
@@ -32,6 +31,9 @@ void clear(cairo_t *cr);
 void draw_image(cairo_t *cr, RsvgHandle *pic, RsvgRectangle *vp);
 void draw_progress(cairo_t *cr);
 
+static long bounded(long i) {
+    return fmaxl(0, fminl(100, i));
+}
 
 int main(int argc, char** argv) {
 	int retcode = 0;
@@ -40,8 +42,8 @@ int main(int argc, char** argv) {
 			pid_t pid = strtol(argv[2], NULL, 10);
 			return modify_existing(pid, argv[1][0]);
 		} else {
-			mval = strtol(argv[1], NULL, 10);
-			val = strtol(argv[2], NULL, 10);
+			mval = bounded(strtol(argv[1], NULL, 10));
+			val  = bounded(strtol(argv[2], NULL, 10));
 			return spawn_new_window();
 		}
 		   
@@ -95,7 +97,7 @@ int test_process_is_correct(pid_t pid) {
 	char buf[1024] = "";
 	get_process_name_by_pid(pid, buf);
 	printf("Name: %s\n", buf);
-	if(strcmp(buf, "./notification-box") == 0 || strcmp(buf, "notification-box"))
+	if(strcmp(buf, "./notification-box") == 0 || strcmp(buf, "notification-box") == 0)
 		return 1;
 	else 
 		return 0;
@@ -105,13 +107,11 @@ int test_process_is_correct(pid_t pid) {
 void sig_handler(int sig) {
 	switch(sig) {
 		case SIGUSR1:
-			printf("Increase...\n");
-			val += mval;
+			val = bounded(val + mval);
 			life = startlife;
 			break;
 		case SIGUSR2:
-			printf("Decrease...\n");
-			val -= mval;
+			val = bounded(val - mval);
 			life = startlife;
 			break;
 	}
@@ -223,10 +223,13 @@ int spawn_new_window() {
 
 		// Wait for X Event or a Timer
 		int num_ready_fds = select(x11_fd + 1, &in_fds, NULL, NULL, &tv);
-		if (num_ready_fds > 0)
-			event_received();
-		else if (num_ready_fds == 0)
-			timer_fired(cr);
+		if (num_ready_fds > 0) {
+        	//printf("Event Received!\n");
+		} else if (num_ready_fds == 0) {
+        	//printf("Life: %d, val: %d\n", life, val);
+        	life--;
+        	draw_progress(cr);
+    	}
 
 		// Handle XEvents and flush the input 
 		while(XPending(dsp))
@@ -238,17 +241,6 @@ int spawn_new_window() {
 	XCloseDisplay(dsp);
 
 	return 0;
-}
-
-void event_received(void) {
-	//printf("Event Received!\n");
-}
-
-void timer_fired(cairo_t *cr) {
-	printf("Life: %d, val: %d\n", life, val);
-	life--;
-
-	draw_progress(cr);
 }
 
 void draw_progress(cairo_t *cr) {
