@@ -21,8 +21,12 @@ Example:
 ~$ notification-box + $(pidof notification-box)
 ```
 
-How to plug into xmonad (via helper script and pamixer dependence):
-`volume-notification` ->
+How it looks like:
+
+![Screenshot](https://github.com/machinedgod/reentrant-progress-notificator/blob/master/screenshot.png?raw=true)
+
+
+How to plug into xmonad (via `volume-notification` script and pamixer dependence):
 ```
 #!/bin/zsh
 
@@ -42,7 +46,7 @@ else
 fi
 ```
 
-`xmonad.hs` ->
+`xmonad.hs` additions:
 ```
 , ((noModMask, 0x1008ff13), spawn "pamixer --increase 2 && volume-notification up") -- More volume
 , ((noModMask, 0x1008ff11), spawn "pamixer --decrease 2 && volume-notification down") -- Less volume
