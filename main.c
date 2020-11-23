@@ -13,15 +13,12 @@
 
 #include "config.h"
 
-static const int width = 256;
-static const int height = 256;
 static char *wm_name  = "NotificationBox";
 static char *wm_class = "notification-box";
 
 static long val  = 0;
 static long mval = 1;
 static long life = startlife;
-
 
 void print_usage(void);
 int spawn_new_window(void);
@@ -32,12 +29,12 @@ void draw_image(cairo_t *cr, RsvgHandle *pic, RsvgRectangle *vp);
 void draw_progress(cairo_t *cr);
 
 static long bounded(long i) {
-    return fmaxl(0, fminl(100, i));
+    return fmaxl(min_value, fminl(max_value, i));
 }
 
 int main(int argc, char** argv) {
     int retcode = 0;
-    if(argc == 3) { // This is to protect from cases like: notification-box + 5 <pid>
+    if(argc == 3) {
         if(argv[1][0] == '+' || argv[1][0] == '-') {
             pid_t pid = strtol(argv[2], NULL, 10);
             return modify_existing(pid, argv[1][0]);
@@ -60,9 +57,11 @@ void print_usage(void) {
 }
 
 int modify_existing(pid_t pid, char modf) {
-    if(!test_process_is_correct(pid)) {
-        fprintf(stderr, "PID doesn't refer to notification-box process!\n");
-        return 1;
+    if(test_for_process_name) {
+        if(!test_process_is_correct(pid)) {
+            fprintf(stderr, "PID doesn't refer to notification-box process!\n");
+            return 1;
+        }
     }
 
     switch(modf) {
@@ -78,7 +77,6 @@ int modify_existing(pid_t pid, char modf) {
 }
 
 static void get_process_name_by_pid(pid_t pid, char* buf) {
-    //char* buf = (char*)calloc(1024,sizeof(char));
     sprintf(buf, "/proc/%d/cmdline", pid);
     FILE* f = fopen(buf,"r");
     if(f) {
@@ -118,8 +116,6 @@ void sig_handler(int sig) {
 }
 
 int spawn_new_window() {
-    //printf("Modval: %d, Initval: %d\n", mval, val);
-
     // Signal traps
     if (signal(SIGUSR1, sig_handler) == SIG_ERR) {
          printf("\ncan't catch SIGUSR1\n");
@@ -147,13 +143,8 @@ int spawn_new_window() {
     XSetWindowAttributes attr;
     attr.colormap = XCreateColormap(dsp, root, vinfo.visual, AllocNone);
     attr.border_pixel = 0;
-    attr.background_pixel = 0x70707070;
+    attr.background_pixel = background_color;
 
-    //Window win = XCreateSimpleWindow(dsp, root,
-    //                                 0, 0,      // x, y
-    //                                 width, height,
-    //                                 0, black,
-    //                                 white);
     Window win = XCreateWindow(dsp, root, 
                                0, 0,  // x, y
                                width, height,
@@ -217,7 +208,7 @@ int spawn_new_window() {
         FD_ZERO(&in_fds);
         FD_SET(x11_fd, &in_fds);
 
-        // Set our timer.  One second sounds good.
+        // One ms timer (probably too much, but whatevs)
         tv.tv_usec = 1000;
         tv.tv_sec = 0;
 
@@ -244,21 +235,17 @@ int spawn_new_window() {
 }
 
 void draw_progress(cairo_t *cr) {
-    const int y = 230;
-    const int w = 6;
-    const int m = 4;
-    const int h = 15;
     const int maxrectcount = 24;
 
     // Erase progressbar part
     cairo_set_source_rgba(cr, 0.5, 0.5, 0.5, 0.5);
-    cairo_rectangle(cr, m + m, y - 2, (w + m) * maxrectcount, h + 4);
+    cairo_rectangle(cr, progressbar_bar_margin * 2, progressbar_y - 2, (progressbar_bar_width + progressbar_bar_margin) * maxrectcount, progressbar_bar_height + 4);
     cairo_fill (cr);
 
     int howmany = ((float) val / 100.0) * maxrectcount;
     int i;
     for(i = 1; i < howmany + 1; i++) {
-        cairo_rectangle (cr, (w + m) * i, y, w, h);
+        cairo_rectangle (cr, (progressbar_bar_width + progressbar_bar_margin) * i, progressbar_y, progressbar_bar_width, progressbar_bar_height);
     }
 
     cairo_set_source_rgba (cr, 0, 0.3, 1, 0.7);
