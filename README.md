@@ -9,18 +9,18 @@ Depends on librsvg (to draw the icon), x11 and Cairo.
 
 Usage:
 ```
-notification-box <mod-val> <init-val>  -- To run initial instance
-notification-box (+|-) <pid>           -- A simple wrapper around `kill(3)`
-                                          to prevent accidentally sending a
-                                          signal to a wrong process
+reentrant-progress-notificator <mod-val> <init-val>  -- To run initial instance
+reentrant-progress-notificator (+|-) <pid>           -- A simple wrapper around `kill(3)`
+                                          				to prevent accidentally sending a
+                                          				signal to a wrong process
 ```
 
 
 Example:
 ```
-~$ notification-box 2 50
+~$ reentrant-progress-notificator 2 50
 ...
-~$ notification-box + $(pidof notification-box)
+~$ reentrant-progress-notificator + $(pidof reentrant-progress-notificator)
 ```
 
 
@@ -37,18 +37,18 @@ How to plug into xmonad (via `volume-notification` script and pamixer dependence
 ```
 #!/bin/zsh
 
-pidof notification-box
+pidof reentrant-progress-notificator
 
 if [[ $? == 1 ]]
 then
-    notification-box 2 $(pamixer --get-volume)
+    reentrant-progress-notificator 2 $(pamixer --get-volume)
 else
     if [[ $1 == "up" ]]
     then
-        notification-box + $(pidof notification-box)
+        reentrant-progress-notificator + $(pidof reentrant-progress-notificator)
     elif [[ $1 == "down" ]]
     then
-        notification-box - $(pidof notification-box)
+        reentrant-progress-notificator - $(pidof reentrant-progress-notificator)
     fi
 fi
 ```
@@ -65,7 +65,7 @@ Notice that the increment unit has to be the same (`2` in this case).
 Additions to your `manageHook`, necessary to un-tile the window and center
 it:
 ```
-, className =? "notification-box" --> placeHook(fixed (0.5, 0.5)) <+> doFloat
+, className =? "reentrant-progress-notificator" --> placeHook(fixed (0.5, 0.5)) <+> doFloat
 ```
 
 

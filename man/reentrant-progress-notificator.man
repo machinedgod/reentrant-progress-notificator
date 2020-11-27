@@ -1,0 +1,107 @@
+.TH "REENTRANT-PROGRESS-NOTIFICATOR" 7 "Fri Nov 27 2020" "Linux" "User commands"
+
+.SH NAME
+reentrant-progress-notificator \- launch X11 dialog with and image progress
+
+.SH SYNOPSIS
+.B reentrant-progress-notificator
+.RB [ OPTIONS ] 
+.B MOD-VAL
+.B INIT-VAL
+
+.B reentrant-progress-notificator 
+.RB (+|\-) 
+.RB PID
+
+.SH DESCRIPTION
+.P
+reentrant-progress-notificator is a X11 dialog that displays an SVG image and a progressbar, that can be updated by sending USR1 and USR2 signals to the running process. Alternatively, you can call it again and pass '+' or '-' and a running process ID, to update the progressbar.
+.P
+All the options are set with the initial instance and preserved during the lifetime. It auto-closes after the lifetime has expired, and it resets it when it receives USR1 or USR2 signal.
+.P
+.B MOD-VAL
+is the increment used to increase/decrease progress when USR1/USR2 are sent
+.P
+.B INIT-VAL
+is the initial progressbar value. By default it is clamped to range 0-100.
+
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+Shows this help.
+
+.TP
+.BR \-t ", " \-\-test\-for\-process\-name
+When second instance is invoked with <pid>, it tests whether process name is the same. Default = off.
+
+.TP
+.BR \-\-width
+Window width. Default = 256.
+
+.TP
+.BR \-\-height
+Window height. Default = 256.
+
+.TP
+.BR \-\-min\-value
+Minimum gauge value. Default = 0.
+
+.TP
+.BR \-\-max\-value
+Maximum gauge value. Default = 100.
+
+.TP
+.BR \-l ", " \-\-startlife
+How long, in ms, will the dialog stay up. Default = 1000.
+
+.TP
+.BR \-\-background\-color
+Background color for the dialog in hex. Transparency is supported. Default = 0x70707070.
+
+.TP
+.BR \-\-viewport\-x
+X position for the image. Default = 10.
+
+.TP
+.BR \-\-viewport\-y
+Y position for the image. Default = 5.
+
+.TP
+.BR \-\-viewport\-width
+Make image of this width. Default = 246.
+
+.TP
+.BR \-\-viewport\-height
+Make image of this height. Default = 216.
+
+.TP
+.BR \-\-progressbar\-bar\-width
+Width of a single bar in the progress bar. Default = 6.
+
+.TP
+.BR \-\-progressbar\-bar\-height
+Height of a single bar in the progress bar. Default = 15.
+
+.TP
+.BR \-\-progressbar\-bar\-margin
+Margins between bars in the progress bar. Default = 4.
+
+.TP
+.BR \-\-progressbar\-y
+Y position for the progress bar. Default = 230.
+
+.TP
+.BR \-i ", " \-\-speaker\-image\-path
+Image to be displayed. Default = "/usr/share/icons/breeze-dark/devices/64/audio-headphones.svg"
+
+.SH BUGS
+.PP
+Passing an invalid filename for the image will probably crash it.
+.PP
+Passing a non-SVG image filename will probably crash it too.
+.PP
+Passing negative values for any coordinate (x,y,width,height, viewport...)
+will probably crash it
+
+.SH AUTHOR
+John Z. (johnz -at- pleasantnightmare -dot- com)

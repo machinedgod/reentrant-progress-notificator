@@ -1,17 +1,17 @@
 #!/bin/zsh
 
-pidof notification-box
+pidof reentrant-progress-notificator
 
 if [[ $? == 1 ]]
 then
-    notification-box 2 $(pamixer --get-volume)
+    reentrant-progress-notificator 2 $(pamixer --get-volume)
 else
     if [[ $1 == "up" ]]
     then
-        notification-box + $(pidof notification-box)
+        reentrant-progress-notificator + $(pidof reentrant-progress-notificator)
     elif [[ $1 == "down" ]]
     then
-        notification-box - $(pidof notification-box)
+        reentrant-progress-notificator - $(pidof reentrant-progress-notificator)
     fi
 fi
 
