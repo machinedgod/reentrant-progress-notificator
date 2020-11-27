@@ -1,4 +1,4 @@
-.TH "REENTRANT-PROGRESS-NOTIFICATOR" 7 "Fri Nov 27 2020" "Linux" "User commands"
+.TH "REENTRANT-PROGRESS-NOTIFICATOR" 1 "Fri Nov 27 2020" "Linux" "User commands"
 
 .SH NAME
 reentrant-progress-notificator \- launch X11 dialog with and image progress
@@ -104,4 +104,4 @@ Passing negative values for any coordinate (x,y,width,height, viewport...)
 will probably crash it
 
 .SH AUTHOR
-John Z. (johnz -at- pleasantnightmare -dot- com)
+John Z. (johnz -at_ pleasantnightmare _dot- com)
