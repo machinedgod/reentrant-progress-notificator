@@ -356,7 +356,7 @@ spawn_new_window()
                                app_config.width, app_config.height,
                                0, vinfo.depth,
                                InputOutput, vinfo.visual,
-                               CWColormap | CWBorderPixel | CWBackPixel,
+                               CWOverrideRedirect | CWColormap | CWBorderPixel | CWBackPixel,
                                &attr);
 
     Atom wm_delete_window = XInternAtom(dsp, "WM_DELETE_WINDOW", 0);

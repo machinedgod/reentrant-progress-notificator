@@ -23,6 +23,7 @@ Example:
 ~$ reentrant-progress-notificator + $(pidof reentrant-progress-notificator)
 ```
 
+Check man page or `--help` for all the options.
 
 How it looks like:
 
@@ -33,30 +34,10 @@ semi-transparent, and the compositor setup I use that blurs the background of
 focused windows.
 
 
-How to plug into xmonad (via `volume-notification` script and pamixer dependence):
+How to plug into `.xmonad.hs` (via `volume-notification` script and pamixer dependency):
 ```
-#!/bin/zsh
-
-pidof reentrant-progress-notificator
-
-if [[ $? == 1 ]]
-then
-    reentrant-progress-notificator 2 $(pamixer --get-volume)
-else
-    if [[ $1 == "up" ]]
-    then
-        reentrant-progress-notificator + $(pidof reentrant-progress-notificator)
-    elif [[ $1 == "down" ]]
-    then
-        reentrant-progress-notificator - $(pidof reentrant-progress-notificator)
-    fi
-fi
-```
-
-`xmonad.hs` additions to your `keys` setup:
-```
-, ((noModMask, 0x1008ff13), spawn "pamixer --increase 2 && volume-notification up") -- More volume
-, ((noModMask, 0x1008ff11), spawn "pamixer --decrease 2 && volume-notification down") -- Less volume
+, ((noModMask, 0x1008ff13), spawn "volume-notification up") -- More volume
+, ((noModMask, 0x1008ff11), spawn "volume-notification down") -- Less volume
 ```
 the hotkeys refer to `VolumeUp` and `VolumeDown` standard media keys.
 Notice that the increment unit has to be the same (`2` in this case).
@@ -67,8 +48,3 @@ it:
 ```
 , className =? "reentrant-progress-notificator" --> placeHook(fixed (0.5, 0.5)) <+> doFloat
 ```
-
-
-TODO:
-- nice fadeout as life approaches end
-- runtime configurable icon, per value (eg. 0 -> mute, 100 -> roof blown off)
