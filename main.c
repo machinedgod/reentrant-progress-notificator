@@ -98,8 +98,8 @@ struct option app_options[] =
 	};
 
 
-static char *wm_name  = "NotificationBox";
-static char *wm_class = "notification-box";
+static char *wm_name  = "ReentrantProgressNotificator";
+static char *wm_class = "reentrant-progress-notificator";
 
 static long val  = 0;
 static long mval = 1;
@@ -238,8 +238,8 @@ void
 print_usage(void)
 {
     printf("Usage:\n");
-    printf("\tnotification-box <options> <mod-val> <init-val>\n");
-    printf("\tnotification-box (+|-) <pid>\n");
+    printf("\treentrant-progress-notificator <options> <mod-val> <init-val>\n");
+    printf("\treentrant-progress-notificator (+|-) <pid>\n");
     printf("\n");
     printf("Options:\n");
 	printf("\t-h, --help\n");
@@ -284,7 +284,7 @@ test_process_is_correct(pid_t pid)
     char buf[256] = "";
     get_process_name_by_pid(pid, buf, 256);
     printf("Name: %s\n", buf);
-    if(strcmp(buf, "./notification-box") == 0 || strcmp(buf, "notification-box") == 0)
+    if(strcmp(buf, "./reentrant-progress-notificator") == 0 || strcmp(buf, "reentrant-progress-notificator") == 0)
         return 1;
     else
         return 0;
@@ -297,7 +297,7 @@ modify_existing(pid_t pid, char modf)
     {
         if(!test_process_is_correct(pid))
         {
-            fprintf(stderr, "PID doesn't refer to notification-box process!\n");
+            fprintf(stderr, "PID doesn't refer to reentrant-progress-notificator process!\n");
             return 1;
         }
     }
@@ -350,6 +350,7 @@ spawn_new_window()
     attr.colormap = XCreateColormap(dsp, root, vinfo.visual, AllocNone);
     attr.border_pixel = 0;
     attr.background_pixel = app_config.background_color;
+    attr.override_redirect = 1;
 
     Window win = XCreateWindow(dsp, root,
                                app_config.x, app_config.y,
@@ -376,10 +377,12 @@ spawn_new_window()
     long eventMask = StructureNotifyMask;
     XSelectInput(dsp, win, eventMask);
     XEvent evt;
+    /*
     do
     {
        XNextEvent(dsp, &evt); // calls XFlush
     } while (evt.type != MapNotify);
+    */
 
 
     // Create Cairo context
