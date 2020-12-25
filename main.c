@@ -350,6 +350,7 @@ spawn_new_window()
     attr.colormap = XCreateColormap(dsp, root, vinfo.visual, AllocNone);
     attr.border_pixel = 0;
     attr.background_pixel = app_config.background_color;
+    attr.override_redirect = 1;
 
     Window win = XCreateWindow(dsp, root,
                                app_config.x, app_config.y,
