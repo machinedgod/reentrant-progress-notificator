@@ -1,28 +1,63 @@
 #!/bin/zsh
 
 mod_amount=5
-image="/usr/share/icons/breeze/applets/22/speaker.svg"
+image_muted="/usr/share/icons/Adwaita/scalable/status/audio-volume-muted-symbolic.svg"
+image_low="/usr/share/icons/Adwaita/scalable/status/audio-volume-low-symbolic.svg"
+image_medium="/usr/share/icons/Adwaita/scalable/status/audio-volume-medium-symbolic.svg"
+image_high="/usr/share/icons/Adwaita/scalable/status/audio-volume-high-symbolic.svg"
 bgcolor=0x50505050
 
-if [[ $1 == "up" ]]; then
-    pamixer --increase $mod_amount
-elif [[ $1 == "down" ]]; then
-    pamixer --decrease $mod_amount
-fi
-
+case "$1" in
+"up")
+	pamixer --increase $mod_amount
+	;;
+"down")
+	pamixer --decrease $mod_amount
+	;;
+"mute-toggle")
+	pamixer --toggle-mute
+	;;
+esac
 
 rpnpid=$(pidof reentrant-progress-notificator)
 
 if [[ $? == 1 ]]; then
-    reentrant-progress-notificator \
-    	--background-color=$bgcolor \
-		--speaker-image-path="$image" \
-    	$mod_amount $(pamixer --get-volume)
+	if [[ $1 == "mute-toggle" ]]; then
+		image_to_set="$image_medium"
+		if [[ $(pamixer --get-mute) == 'true' ]]; then
+			image_to_set="$image_muted"
+		fi
+
+		reentrant-progress-notificator \
+		  --background-color=$bgcolor \
+		  --speaker-image-path="$image_to_set" \
+		  0 0
+	else
+		current_volume=$(pamixer --get-volume)
+		image_to_set="$image_medium"
+		if [[ $current_volume == 0 ]]; then
+			image_to_set="$image_muted"
+		elif [[ $current_volume < 33 ]]; then
+			image_to_set="$image_low"
+		elif [[ $current_volume < 66 ]]; then
+			image_to_set="$image_medium"
+		else 
+			image_to_set="$image_high"
+		fi
+		
+		reentrant-progress-notificator \
+		  --background-color=$bgcolor \
+		  --speaker-image-path="$image_to_set" \
+		  $mod_amount $(pamixer --get-volume)
+	fi
 else
-    if [[ $1 == "up" ]]; then
-        reentrant-progress-notificator + $rpnpid
-    elif [[ $1 == "down" ]]; then
-        reentrant-progress-notificator - $rpnpid
-   fi
+	if [[ $1 == "up" ]]; then
+		reentrant-progress-notificator + $rpnpid
+	elif [[ $1 == "down" ]]; then
+		reentrant-progress-notificator - $rpnpid
+	elif [[ $1 == "mute-toggle" ]]; then
+		# We're in a pickle here :-\ Have to relaunch because of the design
+		# Need to fix this!
+	fi
 fi
 
